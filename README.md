@@ -1,75 +1,123 @@
-Aquí tienes la lista clara, organizada y resumida de los ficheros y ubicaciones creados en el servidor para tu plugin de GLPI flowisechat (asistente GLPI iA-sistant):
+# GLPI iA-sistant Plugin
 
-📂 Ubicación raíz del plugin:
-swift
-Copiar
-Editar
+Asistente flotante para **GLPI** con integración de **Flowise** u Ollama, que permite:
+✅ Resolver dudas a usuarios antes de abrir tickets.  
+✅ Consultar documentación integrada mediante RAG.  
+✅ Conservar historial con memoria de conversación.  
+✅ Estética corporativa Hutchinson (botón rojo con logo).  
+✅ Crear tickets automáticamente en fase 2.
+
+---
+
+## 🚀 Estructura del plugin
+
+El plugin se instala en:
+
 /var/www/html/glpi/plugins/flowisechat/
-🗂️ Estructura de carpetas y ficheros:
-arduino
+
+makefile
 Copiar
 Editar
+
+**Contiene:**
 flowisechat/
 ├── hook.php
 ├── manifest.xml
 ├── setup.php
 ├── js/
-│   ├── flowisechat.js
-│   └── img/
-│       └── logo-hutchinson-white.png
-📑 Descripción de cada fichero:
-✅ hook.php
+│ ├── flowisechat.js
+│ └── img/
+│ └── logo-hutchinson-white.png
 
-Vacío (o con <?php) según buenas prácticas en GLPI 10.
 
-No contiene lógica; necesario para estructura del plugin.
+---
 
-✅ manifest.xml
+## 📂 Descripción de ficheros
 
-Define metadatos del plugin (nombre, versión, autor, GLPI mínimo compatible).
+- **`manifest.xml`**: Metadatos del plugin (nombre, autor, versión).
+- **`setup.php`**: Hooks de inicialización y carga de JS.
+- **`hook.php`**: Archivo de placeholder.
+- **`js/flowisechat.js`**: Lógica del asistente:
+  - Botón flotante con logo de Hutchinson.
+  - Ventana de chat interna.
+  - Envío con `ENTER` o botón.
+  - Conexión con Flowise vía API REST.
+  - Soporte de `sessionId` para memoria persistente por usuario.
+- **`js/img/logo-hutchinson-white.png`**: Logo blanco para el botón del asistente.
 
-✅ setup.php
+---
 
-Contiene las funciones principales del plugin:
+## ⚙️ Configuración del entorno Flowise
 
-plugin_init_flowisechat()
+1️⃣ Asegúrate de que Flowise está expuesto con:
 
-plugin_version_flowisechat()
+PORT=3000
+CORS_ORIGINS=http://<ip_glpi>
 
-plugin_flowisechat_install()
 
-plugin_flowisechat_uninstall()
+2️⃣ **Usa el `chatflowId` correcto** de tu flujo en Flowise para el asistente.
 
-Registra el JS para cargarse en GLPI.
+3️⃣ Configura el token de Flowise en `flowisechat.js`:
 
-✅ js/flowisechat.js
+```javascript
+const baseUrl = 'http://<ip_flowise>:3000';
+const flowId = '<tu_chatflow_id>';
+Authorization: 'Bearer <tu_token_flowise>'
 
-Script del asistente iA-sistant de GLPI:
+✨ Funcionalidades destacadas
+✅ Botón flotante visible en todo GLPI
+✅ Envía consultas con ENTER y botón
+✅ Mensaje de bienvenida personalizado
+✅ Estética consistente con la marca (rojo Hutchinson)
+✅ Historial con memoria por usuario (sessionId)
+✅ Renderizado limpio de mensajes de usuario y asistente
 
-Crea botón flotante.
 
-Abre ventana de chat.
+🛠️ Instalación
+1️⃣ Clonar/copiar en:
 
-Permite escribir preguntas y enviar al LLM de Flowise.
+swift
+Copiar
+Editar
+/var/www/html/glpi/plugins/flowisechat
+2️⃣ Dar permisos:
 
-Muestra respuestas de Flowise dentro de GLPI.
+bash
+Copiar
+Editar
+chown -R www-data:www-data /var/www/html/glpi/plugins/flowisechat
+3️⃣ Limpiar caché de GLPI:
 
-Incluye mejoras como:
+bash
+Copiar
+Editar
+rm -rf /var/www/html/glpi/files/_cache/*
+4️⃣ Reiniciar GLPI:
 
-Botón grande con logo.
+bash
+Copiar
+Editar
+docker restart glpi
+5️⃣ Activar el plugin desde GLPI > Configuración > Plugins.
 
-Fondo rojo Hutchinson.
+🖥️ Uso
+Se muestra un botón “iA-sistant” en rojo en la esquina inferior derecha.
 
-Mensaje de bienvenida.
+Al hacer clic, se despliega el chat.
 
-Envío con ENTER.
+Se puede escribir consultas y enviarlas con ENTER o clic en Enviar.
 
-Ajuste de altura del input.
+Respuestas generadas por tu LLM (Flowise / Ollama).
 
-✅ js/img/logo-hutchinson-white.png
+🪐 Futuras extensiones
+✅ Creación de tickets automática tras la conversación.
+✅ Logs de conversaciones en GLPI.
+✅ Clasificación de urgencia según la consulta.
+✅ Panel de administración de sesiones y métricas de uso.
 
-Logo de Hutchinson en blanco.
+🤝 Contribución
+Pull Requests y sugerencias bienvenidas para mejorar el plugin y extender funcionalidades con RAG, clasificación de intenciones y conexión avanzada con la API de GLPI para generación de tickets inteligentes.
 
-Insertado en el botón “Enviar” dentro del asistente sobre fondo rojo.
-
+🛡️ Licencia
+GPLv3+ - Uso interno y mejora de procesos IT corporativos.
 
