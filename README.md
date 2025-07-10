@@ -19,15 +19,8 @@ makefile
 Copiar
 Editar
 
-**Contiene:**
-flowisechat/
-├── hook.php
-├── manifest.xml
-├── setup.php
-├── js/
-│ ├── flowisechat.js
-│ └── img/
-│ └── logo-hutchinson-white.png
+<img width="307" height="250" alt="image" src="https://github.com/user-attachments/assets/8b731f51-0a43-40ed-a5c3-4a7e30cc392a" />
+
 
 
 ---
