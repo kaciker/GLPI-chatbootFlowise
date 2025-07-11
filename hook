@@ -1,0 +1,21 @@
+<?php
+
+function plugin_flowisechat_hook_pre_layout($params) {
+
+    // Intentamos obtener el ID del usuario
+    $user_id = Session::getLoginUserID();
+
+    if ($user_id) {
+        // Si tenemos éxito, imprimimos un mensaje de éxito
+        echo "";
+
+        // Aquí iría el código final para inyectar el bot...
+        // Por ahora lo dejamos así para la prueba.
+
+    } else {
+        // Si fallamos, imprimimos un mensaje de fallo
+        echo "";
+    }
+
+    return true;
+}

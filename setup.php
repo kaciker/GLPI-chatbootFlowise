@@ -1,8 +1,9 @@
 <?php
+// Fichero: /plugins/flowisechat/setup.php
 
 function plugin_init_flowisechat() {
     global $PLUGIN_HOOKS;
-    // Inyecta tu JS del chatbot
+    // Inyecta tu JS del chatbot de la forma correcta
     $PLUGIN_HOOKS['add_javascript']['flowisechat'] = 'js/flowisechat.js';
     // Declara que el plugin cumple con CSRF
     $PLUGIN_HOOKS['csrf_compliant']['flowisechat'] = true;
@@ -19,18 +20,8 @@ function plugin_version_flowisechat() {
     ];
 }
 
-function plugin_flowisechat_check_prerequisites() {
-    return true;
-}
-
-function plugin_flowisechat_check_config() {
-    return true;
-}
-
-function plugin_flowisechat_install() {
-    return true;
-}
-
-function plugin_flowisechat_uninstall() {
-    return true;
-}
+// El resto de funciones que tenías están perfectas:
+function plugin_flowisechat_check_prerequisites() { return true; }
+function plugin_flowisechat_check_config() { return true; }
+function plugin_flowisechat_install() { return true; }
+function plugin_flowisechat_uninstall() { return true; }

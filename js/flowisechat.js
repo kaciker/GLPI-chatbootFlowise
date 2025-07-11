@@ -1,18 +1,25 @@
-// flowisechat.js - Integración tipo widget oficial con sessionId y memoria
+document.addEventListener("DOMContentLoaded", async () => {
 
-document.addEventListener("DOMContentLoaded", () => {
-    const flowId = '85d00ec1-ad2b-4ad2-9e53-fffe884d36cb';
-    const baseUrl = window.location.protocol + '//' + window.location.hostname + ':3000';
-    // const baseUrl = 'http://10.35.1.186:3000'; // Hut
-    // const baseUrl = 'http://192.168.30.241:3000';   // Visit
-    // Obtener o generar sessionId (persistente por usuario)
-    const SESSION_KEY = 'flowise_chat_sessionId';
-    let sessionId = localStorage.getItem(SESSION_KEY);
-    if (!sessionId) {
-        sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem(SESSION_KEY, sessionId);
+    // FASE 1: Pedir la configuración al backend de GLPI de forma segura.
+    let glpiConfig;
+    try {
+        const response = await fetch('/plugins/flowisechat/ajax/get_config.php');
+        if (!response.ok) {
+            throw new Error('No se pudo obtener la configuración de GLPI. El usuario podría no estar logueado.');
+        }
+        glpiConfig = await response.json();
+    } catch (error) {
+        console.error("Flowise & GLPI:", error.message);
+        return; // Detenemos la ejecución si no hay configuración. El bot no se mostrará.
     }
-    
+
+    // FASE 2: Si tenemos configuración, construimos y mostramos el chat.
+    const { user_id, user_name, session_token, proxy_url } = glpiConfig;
+    // El ID de sesión ahora está vinculado permanentemente al usuario de GLPI.
+    const sessionId = `glpi_user_${user_id}`;
+
+    console.log(`Flowise & GLPI: Bot activado para ${user_name}.`);
+
     // Crear botón flotante profesional embellecido
     const button = document.createElement('button');
     button.innerHTML = `<img src="/plugins/flowisechat/js/img/logo-hutchinson-white.png" alt="AI" style="height:20px; vertical-align:middle; margin-right:6px;"> iA-sistant`;
@@ -76,100 +83,76 @@ document.addEventListener("DOMContentLoaded", () => {
     // Función para renderizar mensajes con colores diferenciados
     function renderMessage(role, content) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'message ' + role;
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+
         const bubble = document.createElement('div');
-        bubble.className = 'bubble';
         bubble.innerHTML = content.trim().replace(/\n/g, '<br>');
 
-        if (role === 'user') {
-            Object.assign(bubble.style, {
-                backgroundColor: '#f0f0f0',
-                color: '#000000',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                margin: '4px 0',
-                alignSelf: 'flex-end',
-                maxWidth: '90%',
-                border: '1px solid #ccc'
-            });
-        } else if (role === 'assistant') {
-            Object.assign(bubble.style, {
-                backgroundColor: '#e6f0fa',
-                color: '#003366',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                margin: '4px 0',
-                alignSelf: 'flex-start',
-                maxWidth: '90%',
-                border: '1px solid #99c2ff'
-            });
-        } else {
-            Object.assign(bubble.style, {
-                backgroundColor: '#fff8e1',
-                color: '#333',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                margin: '4px 0',
-                alignSelf: 'center',
-                maxWidth: '90%',
-                border: '1px solid #fdd835'
-            });
-        }
-
+        const baseStyle = {
+            padding: '8px 12px', borderRadius: '8px', margin: '4px 0', maxWidth: '90%', wordWrap: 'break-word'
+        };
+        const roles = {
+            user: { backgroundColor: '#f0f0f0', color: '#000000', alignSelf: 'flex-end', border: '1px solid #ccc' },
+            assistant: { backgroundColor: '#e6f0fa', color: '#003366', alignSelf: 'flex-start', border: '1px solid #99c2ff' },
+            system: { backgroundColor: '#fff8e1', color: '#333', alignSelf: 'center', border: '1px solid #fdd835', fontSize: '0.9em', textAlign: 'center' }
+        };
+        Object.assign(bubble.style, baseStyle, roles[role] || roles.system);
+        
         wrapper.appendChild(bubble);
         messages.appendChild(wrapper);
-        messages.scrollTop = messages.scrollHeight; // para mantener autoscroll abajo
-        wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }); // para mostrar el inicio del nuevo mensaje
-
+        messages.scrollTop = messages.scrollHeight;
     }
-
 
     // Toggle chat open/close
     button.addEventListener('click', () => {
         if (chatContainer.style.display === 'none') {
             chatContainer.style.display = 'flex';
-            renderMessage('system', '🤖 Wellcome to the IT support Hutchisnon!');
+            if (messages.children.length === 0) {
+                 renderMessage('system', `🤖 ¡Hola ${user_name}! Soy tu asistente de TI.`);
+            }
         } else {
             chatContainer.style.display = 'none';
-            messages.innerHTML = '';
         }
     });
 
-    // Enviar pregunta y mantener memoria usando sessionId
-    sendButton.addEventListener('click', sendQuestion);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendQuestion(); });
-
+    // Enviar pregunta y mantener memoria usando el proxy de GLPI
     async function sendQuestion() {
         const question = input.value.trim();
         if (!question) return;
         renderMessage('user', question);
         input.value = '';
-        const loadingIndex = messages.children.length;
-        renderMessage('assistant', '🤖 Pensando...');
+        const loadingBubble = renderMessage('assistant', '🤖...');
 
         try {
-            const res = await fetch(`${baseUrl}/api/v1/prediction/${flowId}`, {
+            const res = await fetch(proxy_url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer 0HWkYMNQtzRyjC_fsbyJ4a-YVT5YF673kSygqIegmo8' // Usa tu token real aquí
+                    'Session-Token': session_token
                 },
-                body: JSON.stringify({
-                    question,
-                    overrideConfig: {
-                        sessionId
-                    }
-                })
+                body: JSON.stringify({ question: question })
             });
-            if (!res.ok) throw new Error(`Status ${res.status}`);
+            
+            // Elimina el "Pensando..."
+            loadingBubble.parentElement.remove();
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || `Error del servidor: ${res.status}`);
+            }
+
             const data = await res.json();
-            // Reemplaza "Pensando..."
-            messages.removeChild(messages.children[loadingIndex]);
-            // Mostrar respuesta
             renderMessage('assistant', data.text || JSON.stringify(data));
+
         } catch (err) {
-            messages.removeChild(messages.children[loadingIndex]);
+            if (loadingBubble) {
+                loadingBubble.parentElement.remove();
+            }
             renderMessage('system', '❌ Error de conexión: ' + err.message);
         }
     }
+    
+    sendButton.addEventListener('click', sendQuestion);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendQuestion(); });
 });
