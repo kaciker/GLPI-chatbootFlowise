@@ -114,3 +114,13 @@ Pull Requests y sugerencias bienvenidas para mejorar el plugin y extender funcio
 🛡️ Licencia
 GPLv3+ - Uso interno y mejora de procesos IT corporativos.
 
+
+
+
+El proceso es el siguiente:
+
+El Navegador Envía la Cookie: Cuando tu JavaScript llama a get_config.php, tu navegador envía automáticamente la cookie de sesión de GLPI junto con la petición.
+
+GLPI Carga el Contexto: La línea include '.../inc/includes.php'; en nuestro script usa esa cookie para cargar toda tu información de sesión en la memoria del servidor. En este preciso momento, GLPI ya sabe quién eres, cuál es tu ID, tu nombre, tu perfil, etc.
+
+El Script Pide los Datos: Las funciones como Session::getLoginUserID() o Session::getLoginUserName() no "buscan" al usuario. Simplemente leen los datos que ya han sido cargados en el paso anterior.
