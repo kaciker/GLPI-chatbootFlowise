@@ -1,6 +1,6 @@
 // flowisechat.js - Integración tipo widget oficial con sessionId y memoria
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const flowId = '85d00ec1-ad2b-4ad2-9e53-fffe884d36cb';
     const baseUrl = window.location.protocol + '//' + window.location.hostname + ':3000';
     // const baseUrl = 'http://10.35.1.186:3000'; // Hut
@@ -8,8 +8,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Obtener o generar sessionId (persistente por usuario)
     const SESSION_KEY = 'flowise_chat_sessionId';
     let sessionId = localStorage.getItem(SESSION_KEY);
+    let glpiSession = null;
+    try {
+        const res = await fetch('/plugins/flowisechat/ajax/session.php', { credentials: 'same-origin' });
+        if (res.ok) {
+            glpiSession = await res.json();
+            if (glpiSession && glpiSession.sid) {
+                window.FlowiseChatSession = glpiSession; // disponible globalmente
+                sessionId = glpiSession.sid;             // usamos el SID real
+                localStorage.setItem(SESSION_KEY, sessionId);
+            }
+        }
+    } catch (e) {
+        console.error('Flowise & GLPI: error obteniendo sesión', e);
+    }
+
+    // Si no hay sessionId aún, crea uno anónimo
     if (!sessionId) {
-        sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        sessionId = 'anon-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem(SESSION_KEY, sessionId);
     }
     
